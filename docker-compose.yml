@@ -1,0 +1,34 @@
+
+version: "3.9"
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    network_mode: host
+    volumes:
+      - ./e_book_db/project/scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-d", "postgres", "-U", "postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    restart: unless-stopped
+
+  back:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+# "host=localhost port=5432 dbname=$POSTGRES_DB user=$POSTGRES_USER target_session_attrs=any"
+
+# pg_isready -h localhost -d $POSTGRES_DB -u $POSTGRES_USER
